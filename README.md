@@ -7,6 +7,7 @@ Extensions for the [Pi coding agent](https://pi.dev). Each one lives in its own 
 | [pi-todo](pi-todo/) | A checklist the agent follows and you watch. It cannot stop while items are open, and a tick means the item's check passed. |
 | [pi-shoulder-tap](pi-shoulder-tap/) | A desktop notification when Pi needs you, and only then. |
 | [pi-btw](pi-btw/) | Side questions: ask while the agent works, without interrupting or polluting the main conversation. |
+| [pi-recap](pi-recap/) | A short, factual receipt of what the agent did while you were not watching. |
 
 ## Install
 
