@@ -22,7 +22,8 @@ const NAME = "pi-btw";
 class Panel implements Component {
 	private readonly markdown = new Markdown("", 1, 0, getMarkdownTheme());
 	private hasAnswer = false;
-	private note = "thinking…";
+	/** "answering…" while the reply streams, or the error message once it has failed. */
+	private note = "";
 	private failed = false;
 	private offset = 0;
 
@@ -48,7 +49,7 @@ class Panel implements Component {
 
 	/** Rows for the answer: at most half the terminal, so the agent's work stays visible above. */
 	private room() {
-		return Math.max(3, Math.floor(this.tui.terminal.rows / 2) - 4);
+		return Math.max(3, Math.floor(this.tui.terminal.rows / 2) - 6);
 	}
 
 	handleInput(data: string) {
@@ -63,17 +64,27 @@ class Panel implements Component {
 	render(width: number): string[] {
 		const th = this.theme;
 		const rule = th.fg("borderMuted", "─".repeat(width));
-		const body = this.hasAnswer ? this.markdown.render(width) : [];
+		const body = this.failed
+			? [truncateToWidth(` ${th.fg("error", this.note)}`, width)]
+			: this.hasAnswer
+				? this.markdown.render(width)
+				: [` ${th.fg("dim", "thinking…")}`];
 		const room = this.room();
 		this.offset = Math.min(this.offset, Math.max(0, body.length - room));
 		const shown = body.slice(this.offset, this.offset + room);
-		const more = body.length > room ? ` · ↑↓ scroll ${this.offset + 1}-${this.offset + shown.length} of ${body.length}` : "";
+		const hints = [
+			"esc close",
+			...(this.note && !this.failed && this.hasAnswer ? [this.note] : []),
+			...(body.length > room ? [`↑↓ scroll ${this.offset + 1}-${this.offset + shown.length} of ${body.length}`] : []),
+		];
+		// The question, the answer and the keys each stand apart, with a blank line between them.
 		return [
 			rule,
 			truncateToWidth(` ${th.fg("accent", th.bold("btw"))} ${th.fg("muted", this.question)}`, width),
+			"",
 			...shown,
-			...(this.note ? [truncateToWidth(` ${th.fg(this.failed ? "error" : "dim", this.note)}`, width)] : []),
-			truncateToWidth(th.fg("dim", ` esc close${more}`), width),
+			"",
+			truncateToWidth(th.fg("dim", ` ${hints.join(" · ")}`), width),
 			rule,
 		];
 	}
