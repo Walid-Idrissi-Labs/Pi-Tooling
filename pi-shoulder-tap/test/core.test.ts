@@ -45,4 +45,7 @@ test("the message of a done tap is the agent's last text", () => {
 	];
 	assert.equal(lastWords(messages), "I need the API key.");
 	assert.equal(lastWords([]), "");
+	// Markdown would show as raw symbols in a notification. Names with underscores are left alone.
+	const markdown = "## Done\n\n**Fixed** the `parse_date` helper:\n- added a test\n- ran `npm test`\n> all green";
+	assert.equal(lastWords([{ role: "assistant", content: [{ type: "text", text: markdown }] }]), "Done\n\nFixed the parse_date helper:\nadded a test\nran npm test\nall green");
 });

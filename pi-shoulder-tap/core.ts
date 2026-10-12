@@ -51,6 +51,9 @@ export function notification(title: string, body: string, insideTmux = false): s
 	return insideTmux ? `\x1bPtmux;${osc.replaceAll("\x1b", "\x1b\x1b")}\x1b\\${bell}` : osc + bell;
 }
 
+/** A notification shows raw text: emphasis, code ticks, headings and bullets would only be noise in it. */
+const unmark = (text: string) => text.replace(/\*\*|__|`/g, "").replace(/^\s*(#{1,6}|>|[-*])\s+/gm, "");
+
 /** The text of the agent's last message: the most useful thing a "done" notification can say. */
 export function lastWords(messages: readonly { role: string; content?: unknown }[]): string {
 	for (let i = messages.length - 1; i >= 0; i--) {
@@ -60,7 +63,7 @@ export function lastWords(messages: readonly { role: string; content?: unknown }
 			.map((part: { type?: string; text?: string }) => (part?.type === "text" ? (part.text ?? "") : ""))
 			.join(" ")
 			.trim();
-		if (text) return text;
+		if (text) return unmark(text);
 	}
 	return "";
 }
