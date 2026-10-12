@@ -56,7 +56,7 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.registerEntryRenderer<Recap>(NAME, (entry, { expanded }, theme) =>
-		entry.data ? new Text(lines(entry.data, theme, expanded ? Number.POSITIVE_INFINITY : 4).join("\n"), 1, 0) : undefined,
+		entry.data ? new Text(lines(entry.data, theme, expanded ? Number.POSITIVE_INFINITY : 5).join("\n"), 1, 0) : undefined,
 	);
 
 	const stored = (ctx: ExtensionContext) =>

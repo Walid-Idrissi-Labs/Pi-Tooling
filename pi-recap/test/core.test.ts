@@ -50,7 +50,7 @@ test("a recap is kept only for runs with enough activity", () => {
 	assert.equal(worthIt(calls(MIN_TOOL_CALLS)), true);
 });
 
-test("the receipt reads top to bottom, with what is still failing called out", () => {
+test("the receipt reads top to bottom, one thing per line, with what is still failing called out", () => {
 	let run = replay([
 		tool("bash", { command: "npm test" }, true),
 		tool("write", { path: "a.ts" }),
@@ -63,17 +63,19 @@ test("the receipt reads top to bottom, with what is still failing called out", (
 	run = asked(run, "Deploy now?");
 	assert.deepEqual(lines(finish(run, 125_000)), [
 		"recap · 2m05s · 7 tool calls",
-		"changed  a.ts ×2, b.ts",
+		"changed  a.ts ×2",
+		"         b.ts",
 		"ran      1 command, 1 failed",
 		"failing  npm test",
-		"todos    1/2 done · blocked: two: needs VPN",
+		"todos    1/2 done",
+		"blocked  two: needs VPN",
 		"asked    Deploy now?",
 		// Most used first; ties keep the order of first use.
 		"tools    write 2 · read 2 · bash 1 · edit 1 · pi_todo 1",
 	]);
 	// A quiet run shows only what it has, and long lists say how much they left out.
 	assert.deepEqual(lines(finish(replay([tool("read")]), 4000)), ["recap · 4s · 1 tool call", "tools    read 1"]);
-	const many = finish(replay(["a", "b", "c", "d", "e", "f"].map((name) => tool("write", { path: `${name}.ts` }))), 0);
-	assert.equal(lines(many)[1], "changed  a.ts, b.ts, c.ts, d.ts, +2 more");
-	assert.equal(lines(many, undefined, Number.POSITIVE_INFINITY)[1], "changed  a.ts, b.ts, c.ts, d.ts, e.ts, f.ts");
+	const many = finish(replay(["a", "b", "c", "d", "e", "f", "g"].map((name) => tool("write", { path: `${name}.ts` }))), 0);
+	assert.deepEqual(lines(many).slice(1, 7), ["changed  a.ts", "         b.ts", "         c.ts", "         d.ts", "         e.ts", "         +2 more"]);
+	assert.deepEqual(lines(many, undefined, Number.POSITIVE_INFINITY).slice(6, 8), ["         f.ts", "         g.ts"]);
 });

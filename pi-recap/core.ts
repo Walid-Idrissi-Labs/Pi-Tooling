@@ -109,23 +109,27 @@ function duration(ms: number): string {
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
-/** Shows the first `limit` entries and says how many were left out. */
-function some(entries: string[], limit: number, separator: string): string {
-	const shown = entries.slice(0, limit).join(separator);
-	return entries.length > limit ? `${shown}${separator}+${entries.length - limit} more` : shown;
-}
-
-export function lines(recap: Recap, p: Paint = PLAIN, limit = 4): string[] {
-	const row = (label: string, text: string) => `${p.fg("dim", label.padEnd(9))}${text}`;
+export function lines(recap: Recap, p: Paint = PLAIN, limit = 5): string[] {
 	const { commands, todos } = recap;
-	const out = [`${p.fg("accent", p.bold("recap"))}${p.fg("dim", ` · ${duration(recap.endedAt - recap.startedAt)} · ${plural(toolCalls(recap), "tool call")}`)}`];
-	if (recap.files.length) out.push(row("changed", some(recap.files.map((f) => (f.changes > 1 ? `${f.path} ×${f.changes}` : f.path)), limit, ", ")));
-	if (commands.run) out.push(row("ran", `${plural(commands.run, "command")}${commands.failed ? `, ${commands.failed} failed` : ""}`));
-	// The part worth reading first: what was failing when the agent stopped.
-	if (commands.stillFailing.length) out.push(row("failing", p.fg("error", some(commands.stillFailing, limit, " · "))));
-	if (todos) out.push(row("todos", `${todos.done}/${todos.total} done${todos.blocked.length ? p.fg("warning", ` · blocked: ${some(todos.blocked, limit, " · ")}`) : ""}`));
-	if (recap.asked.length) out.push(row("asked", some(recap.asked, limit, " · ")));
-	const tools = Object.entries(recap.tools).sort((a, b) => b[1] - a[1]);
-	out.push(row("tools", p.fg("dim", some(tools.map(([name, n]) => `${name} ${n}`), Math.max(limit, 6), " · "))));
-	return out;
+	/** A labelled row. A list goes one entry per line under its label, so nothing is squeezed onto one. */
+	const rows = (label: string, entries: string[], color?: "error" | "warning") => {
+		const shown = entries.slice(0, limit).map((entry) => (color ? p.fg(color, entry) : entry));
+		if (entries.length > limit) shown.push(p.fg("dim", `+${entries.length - limit} more`));
+		return shown.map((entry, n) => `${p.fg("dim", (n ? "" : label).padEnd(9))}${entry}`);
+	};
+	const tools = Object.entries(recap.tools)
+		.sort((a, b) => b[1] - a[1])
+		.map(([name, n]) => `${name} ${n}`);
+	return [
+		`${p.fg("accent", p.bold("recap"))}${p.fg("dim", ` · ${duration(recap.endedAt - recap.startedAt)} · ${plural(toolCalls(recap), "tool call")}`)}`,
+		...rows("changed", recap.files.map((f) => (f.changes > 1 ? `${f.path} ×${f.changes}` : f.path))),
+		...(commands.run ? rows("ran", [`${plural(commands.run, "command")}${commands.failed ? `, ${commands.failed} failed` : ""}`]) : []),
+		// The part worth reading first: what was failing when the agent stopped.
+		...rows("failing", commands.stillFailing, "error"),
+		...(todos ? rows("todos", [`${todos.done}/${todos.total} done`]) : []),
+		...rows("blocked", todos?.blocked ?? [], "warning"),
+		...rows("asked", recap.asked),
+		// Counts, not a list to read: these stay on one line.
+		...rows("tools", [p.fg("dim", tools.length > 6 ? `${tools.slice(0, 6).join(" · ")} · +${tools.length - 6} more` : tools.join(" · "))]),
+	];
 }

@@ -15,10 +15,13 @@ When a run with enough activity ends, this is added to the transcript:
 
 ```text
 recap · 12m40s · 52 tool calls
-changed  src/auth.ts ×4, src/auth.test.ts, README.md
+changed  src/auth.ts ×4
+         src/auth.test.ts
+         README.md
 ran      14 commands, 2 failed
 failing  npm run lint
-todos    5/6 done · blocked: Deploy to staging: needs VPN access
+todos    5/6 done
+blocked  Deploy to staging: needs VPN access
 asked    Deploy now?
 tools    read 22 · bash 14 · edit 9 · pi_todo 7
 ```
@@ -29,10 +32,11 @@ tools    read 22 · bash 14 · edit 9 · pi_todo 7
 | `ran` | Shell commands it ran, and how many failed |
 | `failing` | Commands whose last run failed: what was still broken when it stopped |
 | `todos` | The checklist as [pi-todo](../pi-todo/) left it, when it was used |
+| `blocked` | Its blocked items, with the reason for each |
 | `asked` | Dialogs the agent opened |
 | `tools` | Its tool calls, most used first |
 
-A line only appears when it has something to say. `Ctrl+O` expands long lists.
+A line only appears when it has something to say. Lists go one entry per line, five at most, and `Ctrl+O` shows the rest.
 
 ## How it works
 
