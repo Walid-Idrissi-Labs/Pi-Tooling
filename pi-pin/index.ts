@@ -2,8 +2,8 @@
  * pi-pin - instructions the agent cannot forget.
  *
  * `/pin <text>` pins an instruction for the session. Pinned instructions open every request the
- * model receives, so they survive compaction, and they are shown in a strip below the editor so
- * you remember what is in force. `/pin` alone edits them, `/pin clear` removes them all.
+ * model receives, so they survive compaction, and they are shown below the editor, one per line,
+ * so you remember what is in force. `/pin` alone edits them, `/pin clear` removes them all.
  *
  * Pins are stored in the session as custom entries; what the model sees is added to each request
  * and never stored.
@@ -27,12 +27,13 @@ export default function (pi: ExtensionAPI) {
 			ctx.ui.setWidget(
 				NAME,
 				(_tui, theme) => ({
-					render: (width) => [truncateToWidth(` ${theme.fg("dim", strip(pins))}`, width)],
+					render: (width) => strip(pins, width - 1, (text, cell) => truncateToWidth(text, cell, "…", true)).map((row) => ` ${theme.fg("dim", row)}`),
 					invalidate() {},
 				}),
 				{ placement: "belowEditor" },
 			);
-		else ctx.ui.setWidget(NAME, [strip(pins)], { placement: "belowEditor" });
+		// No width to lay out for outside the terminal UI: one pin per line.
+		else ctx.ui.setWidget(NAME, pins.map((pin) => `📌 ${pin}`), { placement: "belowEditor" });
 	};
 
 	const restore = (ctx: ExtensionContext) => {

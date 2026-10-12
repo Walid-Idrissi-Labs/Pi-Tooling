@@ -78,7 +78,13 @@ test("the strip shows the pins, and /pin edits them", { skip: !hasTmux && "tmux 
 		await pi.until("the editor with the pin in it", () => pi.screen().includes("# One pinned instruction per line."));
 		pi.keys("C-j");
 		pi.submit("keep the public API stable");
-		await pi.until("both pins in the strip", () => pi.screen().includes("📌 use pnpm, never npm · keep the public API stable"));
+		await pi.until("both pins, one under the other", () => /📌 use pnpm, never npm *\n *📌 keep the public API stable/.test(pi.screen()));
+
+		// A fourth pin starts a second column, so all four stay on screen in three lines.
+		pi.submit("/pin ask before deleting files");
+		pi.submit("/pin write tests first");
+		await pi.until("the fourth pin beside the first", () => /📌 use pnpm, never npm +📌 write tests first/.test(pi.screen()));
+		assert.equal(pi.screen().split("\n").filter((row) => row.includes("📌")).length, 3);
 
 		pi.submit("/pin clear");
 		await pi.until("the strip to go", () => !pi.screen().includes("📌"));

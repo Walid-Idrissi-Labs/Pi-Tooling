@@ -20,7 +20,7 @@ pi install /path/to/pi-pin    # every session
 
 - **In every request.** Pinned instructions open each request the model receives. They are not part of the conversation, so compaction cannot drop them.
 - **Noticed at once.** When you add, edit or clear a pin, also in the middle of a run, the next request ends with a one-time note saying what changed.
-- **Visible to you.** A strip below the editor shows what is in force, so a forgotten pin does not quietly steer the agent.
+- **Visible to you.** The pins are listed below the editor, one per line, so a forgotten pin does not quietly steer the agent. The list takes at most three lines: further pins flow into more columns, so they all stay on screen.
 - **Yours to manage.** `/pin` alone opens the pins as text, one per line: edit, reorder, or delete a line to unpin. The agent has no tool to change them.
 - **Cheap.** The block is identical on every request, so it stays in the prompt cache.
 - **Kept with the session.** Pins survive `/reload` and resuming, and follow the branch you are on.

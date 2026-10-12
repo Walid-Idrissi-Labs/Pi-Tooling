@@ -35,4 +35,26 @@ export const changeNote = (pins: readonly string[]) =>
 
 // --- Text on screen ---
 
-export const strip = (pins: readonly string[]) => `📌 ${pins.join(" · ")}`;
+const ROWS = 3;
+const GAP = "  ";
+/** A column narrower than this cuts too much of a pin to be worth showing. */
+const MIN_COLUMN = 28;
+
+/**
+ * The strip: one pin per line, at most three lines. More pins flow into further columns, so they
+ * all stay on screen. `fit` cuts or pads a cell to a display width (an emoji is two columns wide).
+ */
+export function strip(pins: readonly string[], width: number, fit: (text: string, width: number) => string): string[] {
+	const columns = Math.min(Math.ceil(pins.length / ROWS), Math.max(1, Math.floor((width + GAP.length) / (MIN_COLUMN + GAP.length))));
+	const room = columns * ROWS;
+	const marked = pins.map((pin) => `📌 ${pin}`);
+	// Too many even for columns: the last cell says how many are out of sight.
+	const cells = marked.length > room ? [...marked.slice(0, room - 1), `+${marked.length - room + 1} more, /pin shows all`] : marked;
+	const cellWidth = Math.floor((width - GAP.length * (columns - 1)) / columns);
+	return Array.from({ length: Math.min(ROWS, cells.length) }, (_, row) =>
+		Array.from({ length: columns }, (_, column) => cells[column * ROWS + row])
+			.filter((cell) => cell !== undefined)
+			.map((cell) => fit(cell, cellWidth))
+			.join(GAP),
+	);
+}

@@ -26,6 +26,33 @@ test("the model is given the pins as standing instructions, and told when they c
 	assert.equal(changeNote([]), "<system-reminder>\nThe user removed all pinned instructions.\n</system-reminder>");
 });
 
-test("the strip shows every pin on one line", () => {
-	assert.equal(strip(["use pnpm", "keep the API stable"]), "📌 use pnpm · keep the API stable");
+// Cuts or pads to a width, like the terminal helper does. The pin emoji is two columns and two UTF-16 units, so lengths agree.
+const fit = (text: string, width: number) => (text.length > width ? `${text.slice(0, width - 1)}…` : text.padEnd(width));
+const pinsNamed = (n: number) => Array.from({ length: n }, (_, i) => `pin ${i + 1}`);
+
+test("up to three pins are shown one under the other", () => {
+	assert.deepEqual(strip(["use pnpm", "keep the API stable"], 30, fit), ["📌 use pnpm".padEnd(30), "📌 keep the API stable".padEnd(30)]);
+	assert.deepEqual(strip(["a pin far too long for a narrow terminal"], 20, fit), ["📌 a pin far too lo…"]);
+	assert.equal(strip(pinsNamed(3), 80, fit).length, 3);
+	assert.deepEqual(strip([], 80, fit), []);
+});
+
+test("more than three pins flow into further columns, so all stay on screen", () => {
+	// Two columns of 39, filled top to bottom: the first three keep their place.
+	assert.deepEqual(strip(pinsNamed(5), 80, fit), [
+		`${"📌 pin 1".padEnd(39)}  ${"📌 pin 4".padEnd(39)}`,
+		`${"📌 pin 2".padEnd(39)}  ${"📌 pin 5".padEnd(39)}`,
+		"📌 pin 3".padEnd(39),
+	]);
+	// Nine pins take three columns when the terminal is wide enough for them.
+	assert.match(strip(pinsNamed(9), 120, fit)[0], /^📌 pin 1 +📌 pin 4 +📌 pin 7 +$/);
+});
+
+test("when even columns run out, the last cell says how many pins are out of sight", () => {
+	// 60 columns hold two columns of at least 28, so six cells for eight pins.
+	const rows = strip(pinsNamed(8), 60, fit);
+	assert.match(rows[0], /^📌 pin 1 +📌 pin 4 +$/);
+	assert.match(rows[2], /^📌 pin 3 +\+3 more, \/pin shows all +$/);
+	// A terminal too narrow for two columns keeps one.
+	assert.deepEqual(strip(pinsNamed(5), 40, fit).map((row) => row.trimEnd()), ["📌 pin 1", "📌 pin 2", "+3 more, /pin shows all"]);
 });
