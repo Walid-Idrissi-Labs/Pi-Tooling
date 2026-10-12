@@ -1,0 +1,18 @@
+{
+	"name": "pi-pin",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Instructions the Pi coding agent cannot forget: pinned for the session, in every request, visible to you.",
+	"type": "module",
+	"keywords": ["pi-package"],
+	"pi": {
+		"extensions": ["./index.ts"]
+	},
+	"scripts": {
+		"test": "node --test test/*.test.ts"
+	},
+	"peerDependencies": {
+		"@earendil-works/pi-coding-agent": "*",
+		"@earendil-works/pi-tui": "*"
+	}
+}

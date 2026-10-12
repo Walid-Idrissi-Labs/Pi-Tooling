@@ -42,7 +42,7 @@ test("a side question reads the conversation, keeps its own thread, and leaves t
 
 test("the side thread is still there when the session is resumed", () => {
 	const first = runJson("resume1", extensions, ["What is the capital of France?", "/btw how many people live there?"]);
-	const second = runJson("resume2", extensions, ["/btw and in 1954?"], first.dir);
+	const second = runJson("resume2", extensions, ["/btw and in 1954?"], { from: first.dir });
 	assert.deepEqual(second.seen[0].slice(-3), [
 		{ role: "user", text: "how many people live there?" },
 		{ role: "assistant", text: "About two million." },

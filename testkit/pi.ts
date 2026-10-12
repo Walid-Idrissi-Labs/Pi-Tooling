@@ -8,7 +8,7 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -25,11 +25,18 @@ function tempDir() {
 	return dir;
 }
 
-/** `from` reuses the directory of an earlier run, so its session can be resumed. */
-function sandbox(script: string, from?: string) {
+export interface RunOptions {
+	/** The directory of an earlier run, to resume its session. */
+	from?: string;
+	/** Written to the sandbox's agent directory as settings.json. */
+	settings?: object;
+}
+
+function sandbox(script: string, { from, settings }: RunOptions = {}) {
 	const dir = from ?? tempDir();
 	mkdirSync(join(dir, "cwd"), { recursive: true });
 	mkdirSync(join(dir, "agent"), { recursive: true });
+	if (settings) writeFileSync(join(dir, "agent", "settings.json"), JSON.stringify(settings));
 	const seenFile = join(dir, `seen-${script}.jsonl`);
 	return {
 		dir,
@@ -44,8 +51,8 @@ function sandbox(script: string, from?: string) {
 
 const extensionFlags = (extensions: string[]) => extensions.flatMap((file) => ["-e", file]);
 
-export function runJson(script: string, extensions: string[], prompts: string[], from?: string) {
-	const box = sandbox(script, from);
+export function runJson(script: string, extensions: string[], prompts: string[], options?: RunOptions) {
+	const box = sandbox(script, options);
 	const pi = spawnSync("pi", [...box.flags, ...extensionFlags(extensions), "--mode", "json", ...prompts], {
 		cwd: box.cwd,
 		env: { ...process.env, ...box.env },

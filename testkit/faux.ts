@@ -30,4 +30,10 @@ export function scripted(pi: ExtensionAPI, scripts: Record<string, AssistantMess
 		}),
 	);
 	pi.registerProvider(faux.provider);
+
+	// The built-in /compact lives in the interactive UI, so tests compact through the extension API.
+	// Pi refuses to compact a tiny session unless settings.json has { compaction: { keepRecentTokens: 1 } }.
+	pi.registerCommand("test-compact", {
+		handler: (_args, ctx) => new Promise<void>((resolve, reject) => ctx.compact({ onComplete: () => resolve(), onError: reject })),
+	});
 }
