@@ -1,0 +1,20 @@
+{
+	"name": "pi-todo",
+	"version": "0.1.0",
+	"private": true,
+	"description": "A checklist for the Pi coding agent: the agent cannot stop while items are open, and a tick means the item's check passed.",
+	"type": "module",
+	"keywords": ["pi-package"],
+	"pi": {
+		"extensions": ["./index.ts"]
+	},
+	"scripts": {
+		"test": "node --test test/*.test.ts"
+	},
+	"peerDependencies": {
+		"@earendil-works/pi-ai": "*",
+		"@earendil-works/pi-coding-agent": "*",
+		"@earendil-works/pi-tui": "*",
+		"typebox": "*"
+	}
+}

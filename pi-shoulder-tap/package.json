@@ -1,0 +1,17 @@
+{
+	"name": "pi-shoulder-tap",
+	"version": "0.1.0",
+	"private": true,
+	"description": "A desktop notification when the Pi coding agent needs you, and only then.",
+	"type": "module",
+	"keywords": ["pi-package"],
+	"pi": {
+		"extensions": ["./index.ts"]
+	},
+	"scripts": {
+		"test": "node --test test/*.test.ts"
+	},
+	"peerDependencies": {
+		"@earendil-works/pi-coding-agent": "*"
+	}
+}

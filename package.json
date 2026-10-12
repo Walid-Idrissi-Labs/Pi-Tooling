@@ -1,0 +1,14 @@
+{
+	"name": "pi-tooling",
+	"version": "0.1.0",
+	"private": true,
+	"description": "Extensions for the Pi coding agent: a checklist the agent cannot skip, notifications when it needs you, and side questions.",
+	"type": "module",
+	"keywords": ["pi-package"],
+	"pi": {
+		"extensions": ["./pi-todo/index.ts", "./pi-shoulder-tap/index.ts", "./pi-btw/index.ts"]
+	},
+	"scripts": {
+		"test": "node --test pi-*/test/*.test.ts"
+	}
+}
