@@ -172,7 +172,8 @@ export function fromEditText(text: string, old: Item[], now = Date.now()): Item[
 
 // --- Panel ---
 
-const MAX_ROWS = 8;
+/** Lines for the items, second lines included. The header and the "more" markers come on top. */
+const MAX_LINES = 10;
 
 function elapsed(ms: number): string {
 	const s = Math.max(0, Math.floor(ms / 1000));
@@ -191,33 +192,42 @@ export function panel(items: Item[], p: Paint, { auto = true, runningSince, now 
 	const { done, total } = count(items);
 	// Time on this step in the current run. Hidden while idle, when wall-clock time would count the user's absence.
 	const timer = (i: Item) => (runningSince === undefined ? "" : p.fg("dim", `  ${elapsed(now - Math.max(i.startedAt ?? 0, runningSince))}`));
-	const row = (i: Item) => {
+	// One line per item. What needs saying about it goes on a second line under its text:
+	// the check being run, or why it is blocked or dropped.
+	const lines = (i: Item): string[] => {
 		const id = p.fg("dim", `#${i.id}`);
-		const check = i.check ? p.fg("dim", `  $ ${i.check}`) : "";
-		const why = i.note ? ` — ${i.note}` : "";
+		const under = (text: string) => `${" ".repeat(String(i.id).length + 4)}${text}`;
 		switch (i.status) {
 			case "done":
 				// Green tick: the check command passed. Grey tick: the agent's (or user's) word.
-				return `${i.verified ? p.fg("success", "✔") : p.fg("muted", "✓")} ${id} ${p.fg("dim", p.strikethrough(i.text))}`;
+				return [`${i.verified ? p.fg("success", "✔") : p.fg("muted", "✓")} ${id} ${p.fg("dim", p.strikethrough(i.text))}`];
 			case "in_progress":
-				return `${p.fg("accent", "▸")} ${id} ${p.bold(i.text)}${timer(i)}${check}`;
+				return [`${p.fg("accent", "▸")} ${id} ${p.bold(i.text)}${timer(i)}`, ...(i.check ? [under(p.fg("dim", `$ ${i.check}`))] : [])];
 			case "pending":
-				return `${p.fg("muted", "◻")} ${id} ${i.text}${check}`;
+				return [`${p.fg("muted", "◻")} ${id} ${i.text}`];
 			case "blocked":
-				return `${p.fg("warning", "⊘")} ${id} ${i.text}${p.fg("warning", why)}`;
+				return [`${p.fg("warning", "⊘")} ${id} ${i.text}`, ...(i.note ? [under(p.fg("warning", i.note))] : [])];
 			case "dropped":
-				return `${p.fg("dim", "✗")} ${id} ${p.fg("dim", p.strikethrough(i.text) + why)}`;
+				return [`${p.fg("dim", "✗")} ${id} ${p.fg("dim", p.strikethrough(i.text))}`, ...(i.note ? [under(p.fg("dim", i.note))] : [])];
 		}
 	};
-	// The window follows the item being worked on, so it is always on screen.
+	const blocks = items.map(lines);
+	// The window follows the item being worked on, then takes whatever lines are left around it.
 	const focus = ["in_progress", "pending"].map((s) => items.findIndex((i) => i.status === s)).find((n) => n >= 0) ?? items.length - 1;
-	const from = Math.max(0, Math.min(focus - 2, items.length - MAX_ROWS));
-	const rows = items.slice(from, from + MAX_ROWS);
-	const below = items.length - from - rows.length;
+	let from = Math.max(0, focus - 2);
+	let to = from;
+	let used = 0;
+	while (to < blocks.length && used + blocks[to].length <= MAX_LINES) used += blocks[to++].length;
+	while (from > 0 && used + blocks[from - 1].length <= MAX_LINES) used += blocks[--from].length;
+	const below = blocks.length - to;
+	// When items are out of sight, one square each keeps the whole list on screen.
+	const square = (i: Item) =>
+		i.status === "pending" ? p.fg("dim", "□") : p.fg(i.status === "done" ? (i.verified ? "success" : "muted") : i.status === "blocked" ? "warning" : "accent", "■");
+	const overview = from || below ? `  ${items.filter((i) => i.status !== "dropped").map(square).join("")}` : "";
 	return [
-		p.fg("accent", p.bold(`Todos ${done}/${total}`)) + (auto ? "" : p.fg("warning", "  keep-going off")),
+		p.fg("accent", p.bold(`Todos ${done}/${total}`)) + overview + (auto ? "" : p.fg("warning", "  keep-going off")),
 		...(from ? [p.fg("dim", `  … ${from} above`)] : []),
-		...rows.map(row),
+		...blocks.slice(from, to).flat(),
 		...(below ? [p.fg("dim", `  … ${below} more`)] : []),
 	];
 }

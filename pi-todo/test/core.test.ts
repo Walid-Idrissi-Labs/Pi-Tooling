@@ -85,19 +85,37 @@ test("the edit text round-trips and applies the user's changes", () => {
 	assert.equal(edited[1].verified, true);
 });
 
-test("the panel follows the active item and shows why a tick can be trusted", () => {
-	let items = plan([], Array.from({ length: 12 }, (_, n) => ({ text: `step ${n + 1}`, check: n === 5 ? "make test" : undefined })), undefined, 0);
+test("the panel gives each item one line, and a second one only for what needs saying", () => {
+	let items = plan([], [{ text: "a", check: "make a" }, { text: "b", check: "make b" }, { text: "c" }, { text: "d" }, { text: "e" }], undefined, 0);
+	items = finish(items, 1, { verified: true }, 0);
+	items = close(items, 3, "blocked", "needs a key", 0);
+	items = close(items, 4, "dropped", "not needed", 0);
+	assert.deepEqual(panel(items, PLAIN, { runningSince: 5000, now: 70_000 }), [
+		"Todos 1/4",
+		"✔ #1 a",
+		// The step being worked on: time in this run, and the check that will decide it.
+		"▸ #2 b  1m05s",
+		"     $ make b",
+		"⊘ #3 c",
+		"     needs a key",
+		"✗ #4 d",
+		"     not needed",
+		"◻ #5 e",
+	]);
+	// Idle: no timer. A waiting item does not show its check yet.
+	assert.deepEqual(panel(plan([], [{ text: "a" }, { text: "b", check: "make b" }]), PLAIN, { auto: false }), ["Todos 0/2  keep-going off", "▸ #1 a", "◻ #2 b"]);
+});
+
+test("a long list is windowed around the active item, with one square per item so none is lost from view", () => {
+	let items = plan([], Array.from({ length: 14 }, (_, n) => ({ text: `step ${n + 1}`, check: n === 5 ? "make test" : undefined })), undefined, 0);
 	for (const id of [1, 2, 3, 4, 5]) items = finish(items, id, { verified: id % 2 === 0, note: "seen" }, 0);
-	const lines = panel(items, PLAIN, { auto: false, runningSince: 5000, now: 70_000 });
-	assert.equal(lines[0], "Todos 5/12  keep-going off");
-	assert.equal(lines[1], "  … 3 above");
-	assert.equal(lines[2], "✔ #4 step 4");
-	assert.equal(lines[3], "✓ #5 step 5");
-	// Counted from when this run started, not from when the step was first started.
-	assert.equal(lines[4], "▸ #6 step 6  1m05s  $ make test");
-	assert.equal(lines.at(-1), "  … 1 more");
-	assert.equal(lines.length, 11);
-	// Idle: no timer.
-	assert.equal(panel(items, PLAIN)[4], "▸ #6 step 6  $ make test");
-	assert.deepEqual(panel(close(plan([], [{ text: "a" }]), 1, "blocked", "needs a key"), PLAIN), ["Todos 0/1", "⊘ #1 a — needs a key"]);
+	const lines = panel(items, PLAIN);
+	assert.deepEqual(lines.slice(0, 6), ["Todos 5/14  ■■■■■■□□□□□□□□", "  … 3 above", "✔ #4 step 4", "✓ #5 step 5", "▸ #6 step 6", "     $ make test"]);
+	assert.deepEqual(lines.slice(-2), ["◻ #12 step 12", "  … 2 more"]);
+	// Ten lines for the items, plus the header and the two markers.
+	assert.equal(lines.length, 13);
+	// Near the end, the window reaches back instead of leaving lines unused.
+	for (const id of [6, 7, 8, 9, 10, 11, 12]) items = finish(items, id, { verified: true }, 0);
+	assert.deepEqual(panel(items, PLAIN).slice(1, 3), ["  … 4 above", "✓ #5 step 5"]);
+	assert.equal(panel(items, PLAIN).at(-1), "◻ #14 step 14");
 });

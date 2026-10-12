@@ -13,16 +13,18 @@ Then ask for multi-step work as usual. The agent gets a `pi_todo` tool and is to
 
 ## What you see
 
-A panel above the editor, and a `☑ 3/7` counter in the footer.
+A panel above the editor, one line per item, and a `☑ 3/7` counter in the footer.
 
 | Mark | Meaning |
 |---|---|
 | `✔` green | Done, and the item's check command passed |
 | `✓` grey | Done on a written note only (the agent's word, or your own tick) |
-| `▸` | In progress, with the time spent on it in the current run and its check command |
-| `◻` | Pending, with its check command if it has one |
-| `⊘` | Blocked, with the reason |
-| `✗` | Dropped, with the reason |
+| `▸` | In progress, with the time spent on it in the current run. Its check command is on the line below |
+| `◻` | Pending |
+| `⊘` | Blocked. The reason is on the line below |
+| `✗` | Dropped. The reason is on the line below |
+
+A long list is windowed around the item being worked on. The header then shows one square per item, so none is lost from view.
 
 ## How it works
 
@@ -59,7 +61,7 @@ In the editor, each item is one line. Reorder or delete lines, type a new line t
 
 ## Limits
 
-- The agent writes the check commands, so a lazy one such as `true` would pass. The panel shows every command so you can spot it.
+- The agent writes the check commands, so a lazy one such as `true` would pass. The panel shows the command of the item being worked on, and `/pi-todo` shows them all, so you can spot it.
 - Every check command has the same 10-minute timeout (`CHECK_TIMEOUT_S` in `index.ts`).
 - The tool is named `pi_todo`, not `todo`: Pi keeps only the first tool registered under a name, and other todo extensions use that one.
 - The agent gets one todo list. At session start, pi-todo hides any other extension's `todo` tool from the model and says so in a notice. With two, the model picks by your wording, and the other tool's own "use me for todos" rule tends to win. That extension's commands keep working; remove it with `pi remove <source>` if you no longer use it.
