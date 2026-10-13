@@ -6,7 +6,7 @@
 	"type": "module",
 	"keywords": ["pi-package"],
 	"pi": {
-		"extensions": ["./pi-todo/index.ts", "./pi-shoulder-tap/index.ts", "./pi-btw/index.ts", "./pi-recap/index.ts", "./pi-pin/index.ts"]
+		"extensions": ["./pi-todo/index.ts", "./pi-shoulder-tap/index.ts", "./pi-btw/index.ts", "./pi-recap/index.ts", "./pi-pin/index.ts", "./pi-explorer/index.ts"]
 	},
 	"scripts": {
 		"test": "node --test pi-*/test/*.test.ts"

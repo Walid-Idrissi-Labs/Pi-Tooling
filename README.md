@@ -9,6 +9,7 @@ Extensions for the [Pi coding agent](https://pi.dev). Each one lives in its own 
 | [pi-btw](pi-btw/) | Side questions: ask while the agent works, without interrupting or polluting the main conversation. |
 | [pi-recap](pi-recap/) | A short, factual receipt of what the agent did while you were not watching. |
 | [pi-pin](pi-pin/) | Instructions the agent cannot forget: pinned for the session, in every request, visible to you. |
+| [pi-explorer](pi-explorer/) | A file tree of the folder Pi runs in: docked beside the conversation, and clickable. |
 
 ## Install
 

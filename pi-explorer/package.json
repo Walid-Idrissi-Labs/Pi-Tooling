@@ -1,0 +1,18 @@
+{
+	"name": "pi-explorer",
+	"version": "0.1.0",
+	"private": true,
+	"description": "A clickable file tree beside the Pi coding agent's conversation, docked as a side column.",
+	"type": "module",
+	"keywords": ["pi-package"],
+	"pi": {
+		"extensions": ["./index.ts"]
+	},
+	"scripts": {
+		"test": "node --test test/*.test.ts"
+	},
+	"peerDependencies": {
+		"@earendil-works/pi-coding-agent": "*",
+		"@earendil-works/pi-tui": "*"
+	}
+}

@@ -30,6 +30,8 @@ export interface RunOptions {
 	from?: string;
 	/** Written to the sandbox's agent directory as settings.json. */
 	settings?: object;
+	/** runTui only: the terminal's width. 100 unless given. */
+	columns?: number;
 }
 
 function sandbox(script: string, { from, settings }: RunOptions = {}) {
@@ -67,14 +69,14 @@ export const hasTmux = spawnSync("tmux", ["-V"]).status === 0;
 
 let servers = 0;
 
-export function runTui(script: string, extensions: string[]) {
-	const box = sandbox(script);
+export function runTui(script: string, extensions: string[], options?: RunOptions) {
+	const box = sandbox(script, options);
 	const rawFile = join(box.dir, "raw.log");
 	// A private server and no config file, so the user's own tmux is neither touched nor needed.
 	const tmux = (...args: string[]) => spawnSync("tmux", ["-L", `pi-test-${process.pid}-${servers}`, "-f", "/dev/null", ...args], { encoding: "utf8" });
 	servers++;
 	const env = Object.entries(box.env).flatMap(([key, value]) => ["-e", `${key}=${value}`]);
-	const started = tmux("new-session", "-d", "-s", "t", "-x", "100", "-y", "30", "-c", box.cwd, ...env, "pi", ...box.flags, ...extensionFlags(extensions));
+	const started = tmux("new-session", "-d", "-s", "t", "-x", String(options?.columns ?? 100), "-y", "30", "-c", box.cwd, ...env, "pi", ...box.flags, ...extensionFlags(extensions));
 	if (started.status !== 0) throw new Error(`tmux failed: ${started.stderr}`);
 	// Everything pi writes, escape sequences included: tmux swallows the ones it does not draw.
 	tmux("pipe-pane", "-t", "t", `cat >> '${rawFile}'`);
@@ -83,6 +85,8 @@ export function runTui(script: string, extensions: string[]) {
 
 	const screen = () => tmux("capture-pane", "-t", "t", "-p").stdout;
 	return {
+		/** The folder pi runs in, empty at the start. */
+		cwd: box.cwd,
 		seen: box.seen,
 		screen,
 		raw: () => (existsSync(rawFile) ? readFileSync(rawFile, "utf8") : ""),
